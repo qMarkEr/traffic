@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radpostauth Records</title>
+</head>
+<body>
+<h1>Radpostauth Records</h1>
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>Username</th>
+        <th>Pass</th>
+        <th>Reply</th>
+        <th>CalledStationId</th>
+        <th>CallingStationId</th>
+        <th>Authdate</th>
+        <th>Class</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Username}}</td>
+        <td>{{.Pass}}</td>
+        <td>{{.Reply}}</td>
+        <td>{{.CalledStationId}}</td>
+        <td>{{.CallingStationId}}</td>
+        <td>{{.Authdate}}</td>
+        <td>{{.Class}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

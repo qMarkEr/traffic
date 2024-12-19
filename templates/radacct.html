@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radacct Records</title>
+</head>
+<body>
+<h1>Radacct Records</h1>
+<table border="1">
+    <tr>
+        <th>RadAcctId</th>
+        <th>AcctSessionId</th>
+        <th>AcctUniqueId</th>
+        <th>UserName</th>
+        <th>Realm</th>
+        <th>NASIPAddress</th>
+        <th>NASPortId</th>
+        <th>NASPortType</th>
+        <th>AcctStartTime</th>
+        <th>AcctUpdateTime</th>
+        <th>AcctStopTime</th>
+        <th>AcctInterval</th>
+        <th>AcctSessionTime</th>
+        <th>AcctAuthentic</th>
+        <th>ConnectInfoStart</th>
+        <th>ConnectInfoStop</th>
+        <th>AcctInputOctets</th>
+        <th>AcctOutputOctets</th>
+        <th>CalledStationId</th>
+        <th>CallingStationId</th>
+        <th>AcctTerminateCause</th>
+        <th>ServiceType</th>
+        <th>FramedProtocol</th>
+        <th>FramedIPAddress</th>
+        <th>FramedIPv6Address</th>
+        <th>FramedIPv6Prefix</th>
+        <th>FramedInterfaceId</th>
+        <th>DelegatedIPv6Prefix</th>
+        <th>Class</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.RadAcctId}}</td>
+        <td>{{.AcctSessionId}}</td>
+        <td>{{.AcctUniqueId}}</td>
+        <td>{{.UserName}}</td>
+        <td>{{.Realm}}</td>
+        <td>{{.NASIPAddress}}</td>
+        <td>{{.NASPortId}}</td>
+        <td>{{.NASPortType}}</td>
+        <td>{{.AcctStartTime}}</td>
+        <td>{{.AcctUpdateTime}}</td>
+        <td>{{.AcctStopTime}}</td>
+        <td>{{.AcctInterval}}</td>
+        <td>{{.AcctSessionTime}}</td>
+        <td>{{.AcctAuthentic}}</td>
+        <td>{{.ConnectInfoStart}}</td>
+        <td>{{.ConnectInfoStop}}</td>
+        <td>{{.AcctInputOctets}}</td>
+        <td>{{.AcctOutputOctets}}</td>
+        <td>{{.CalledStationId}}</td>
+        <td>{{.CallingStationId}}</td>
+        <td>{{.AcctTerminateCause}}</td>
+        <td>{{.ServiceType}}</td>
+        <td>{{.FramedProtocol}}</td>
+        <td>{{.FramedIPAddress}}</td>
+        <td>{{.FramedIPv6Address}}</td>
+        <td>{{.FramedIPv6Prefix}}</td>
+        <td>{{.FramedInterfaceId}}</td>
+        <td>{{.DelegatedIPv6Prefix}}</td>
+        <td>{{.Class}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radreply Records</title>
+</head>
+<body>
+<h1>Radreply Records</h1>
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>UserName</th>
+        <th>Attribute</th>
+        <th>Op</th>
+        <th>Value</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.UserName}}</td>
+        <td>{{.Attribute}}</td>
+        <td>{{.Op}}</td>
+        <td>{{.Value}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

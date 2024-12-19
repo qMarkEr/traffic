@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nasreload Records</title>
+</head>
+<body>
+<h1>Nasreload Records</h1>
+<table border="1">
+    <tr>
+        <th>NASIPAddress</th>
+        <th>ReloadTime</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.NASIPAddress}}</td>
+        <td>{{.ReloadTime}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

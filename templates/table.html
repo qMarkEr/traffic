@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Таблица {{.TableName}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            margin: 20px 0;
+            border-collapse: collapse;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        tr:nth-child(even) td {
+            background-color: #f2f2f2;
+        }
+        tr:hover td {
+            background-color: #e2e2e2;
+        }
+        button {
+            padding: 5px 10px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #d32f2f;
+        }
+        a {
+            text-decoration: none;
+            color: #4CAF50;
+            margin: 10px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination a {
+            padding: 8px 16px;
+            margin: 0 5px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+        .pagination a:hover {
+            background-color: #45a049;
+        }
+        .pagination span {
+            padding: 8px 16px;
+        }
+    </style>
+</head>
+<body>
+<h1>Таблица: {{.TableName}}</h1>
+
+<table>
+    <thead>
+    <tr>
+        {{range .Columns}}
+        <th>{{.}}</th>
+        {{end}}
+        <th>Действия</th> <!-- Колонка для кнопок действий -->
+    </tr>
+    </thead>
+    <tbody>
+    {{range .Records}}
+    <tr>
+        {{range .}} <!-- Доступ к каждому элементу строки -->
+        <td>{{.}}</td> <!-- Отображение значений из строки -->
+        {{end}}
+        {{if eq $.TableName "radacct"}}
+        <td>
+            <form action="/delete" method="get" style="display:inline;">
+                <input type="hidden" name="table" value="{{$.TableName}}">
+                <input type="hidden" name="id" value="{{index . 0}}">
+                <button type="submit">Удалит</button>
+            </form>
+        </td>
+        {{else}}
+        <td>
+            <form action="/delete" method="get" style="display:inline;">
+                <input type="hidden" name="table" value="{{$.TableName}}">
+                <input type="hidden" name="id" value="{{index . 0}}">
+                <button type="submit">Удалят</button>
+            </form>
+        </td>
+        {{end}}
+    </tr>
+    {{end}}
+    </tbody>
+</table>
+
+<!-- Пагинация -->
+<div class="pagination">
+    {{if gt .CurrentPage 1}}
+    <a href="/table/{{.TableName}}?page={{sub .CurrentPage 1}}">Предыдущая</a>
+    {{end}}
+    <span>Страница {{.CurrentPage}} из {{.TotalPages}}</span>
+    {{if lt .CurrentPage .TotalPages}}
+    <a href="/table/{{.TableName}}?page={{add .CurrentPage 1}}">Следующая</a>
+    {{end}}
+</div>
+
+<a href="/">Назад</a>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radgroupreply Records</title>
+</head>
+<body>
+<h1>Radgroupreply Records</h1>
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>GroupName</th>
+        <th>Attribute</th>
+        <th>Op</th>
+        <th>Value</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.GroupName}}</td>
+        <td>{{.Attribute}}</td>
+        <td>{{.Op}}</td>
+        <td>{{.Value}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>

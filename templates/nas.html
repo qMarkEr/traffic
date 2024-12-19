@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nas Records</title>
+</head>
+<body>
+<h1>Nas Records</h1>
+<table border="1">
+    <tr>
+        <th>Id</th>
+        <th>Nasname</th>
+        <th>Shortname</th>
+        <th>Type</th>
+        <th>Ports</th>
+        <th>Secret</th>
+        <th>Server</th>
+        <th>Community</th>
+        <th>Description</th>
+    </tr>
+    {{range .}}
+    <tr>
+        <td>{{.Id}}</td>
+        <td>{{.Nasname}}</td>
+        <td>{{.Shortname}}</td>
+        <td>{{.Type}}</td>
+        <td>{{.Ports}}</td>
+        <td>{{.Secret}}</td>
+        <td>{{.Server}}</td>
+        <td>{{.Community}}</td>
+        <td>{{.Description}}</td>
+    </tr>
+    {{end}}
+</table>
+</body>
+</html>
