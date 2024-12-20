@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    .container {
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Log Viewer</h1>
+</header>
+<div class="container">
+  {{if .LogFiles}}
+  <h2>Select a Log File</h2>
+  <ul>
+    {{range .LogFiles}}
+    <li><a href="/logs/view?file={{.}}">{{.}}</a></li>
+    {{end}}
+  </ul>
+  {{end}}
+
+  {{if .SelectedFile}}
+  <h2>Viewing Log: {{.SelectedFile}}</h2>
+  <table>
+    <thead>
+    <tr>
+      <th>Timestamp</th>
+      <th>IP Address</th>
+      <th>Service</th>
+      <th>Log Level</th>
+      <th>Message</th>
+    </tr>
+    </thead>
+    <tbody>
+    {{range .LogEntries}}
+    <tr>
+      <td>{{.Timestamp}}</td>
+      <td>{{.IP}}</td>
+      <td>{{.Service}}</td>
+      <td>{{.Level}}</td>
+      <td>{{.Message}}</td>
+    </tr>
+    {{end}}
+    </tbody>
+  </table>
+  {{end}}
+</div>
+</body>
+</html>

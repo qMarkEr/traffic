@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "admin/models"
+	"bufio"
 	_ "context"
 	"crypto/rand"
 	"database/sql"
@@ -13,8 +14,12 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	_ "reflect"
+	"regexp"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -25,7 +30,7 @@ const (
 
 var (
 	sessions     = make(map[string]string) // Карта сессий: sessionID -> username
-	sessionsLock sync.Mutex                // Блокировка для защиты карты сессий
+	sessionsLock sync.Mutex
 )
 
 type PageData struct {
@@ -383,11 +388,151 @@ func join(strings []string, sep string) string {
 	return result
 }
 
+// LogEntry represents a parsed log entry
+type LogEntry struct {
+	Timestamp string
+	IP        string
+	Service   string
+	Level     string
+	Message   string
+}
+
+// TemplateData holds data for rendering templates
+type TemplateData struct {
+	LogFiles     []string
+	LogEntries   []LogEntry
+	SelectedFile string
+}
+
+// parseLogFile parses the log file at the given path
+func parseLogFile(filePath string) ([]LogEntry, error) {
+	var entries []LogEntry
+
+	// Regular expression to parse log lines
+	logPattern := regexp.MustCompile(`^(?P<timestamp>[\d\-T:+]+)\s+(?P<ip>\d{1,3}(\.\d{1,3}){3})\s+\[(?P<service>[a-zA-Z0-9]+)\.(?P<level>[a-z]+)\]\s+(?P<message>.+)$`)
+
+	// Open the log file
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
+
+	// Read the file line by line
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		match := logPattern.FindStringSubmatch(line)
+		if match != nil {
+			entries = append(entries, LogEntry{
+				Timestamp: match[1],
+				IP:        match[2],
+				Service:   match[3],
+				Level:     match[4],
+				Message:   match[5],
+			})
+		}
+	}
+
+	// Check for scanner errors
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("error reading file: %w", err)
+	}
+
+	return entries, nil
+}
+
+// getLogFiles retrieves a list of log files in the given directory
+func getLogFiles(logDir string) ([]string, error) {
+	var files []string
+
+	err := filepath.Walk(logDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".log") {
+			files = append(files, info.Name())
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("error reading log directory: %w", err)
+	}
+
+	return files, nil
+}
+
+// logListHandler serves the list of log files
+func logListHandler(w http.ResponseWriter, r *http.Request) {
+	logDir := "/var/log/syslog/" // Change to your log directory
+	files, err := getLogFiles(logDir)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to retrieve log files: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Parse and execute the HTML template for log selection
+	tmpl, err := template.ParseFiles("templates/log_template.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to load template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare template data with the list of log files
+	data := TemplateData{
+		LogFiles: files,
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
+	}
+}
+
+// logViewerHandler serves the content of a selected log file
+func logViewerHandler(w http.ResponseWriter, r *http.Request) {
+	logDir := "/var/log/syslog/" // Change to your log directory
+	logFile := r.URL.Query().Get("file")
+
+	if logFile == "" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	fullPath := filepath.Join(logDir, logFile)
+	entries, err := parseLogFile(fullPath)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse log file: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Parse and execute the HTML template for log viewer
+	tmpl, err := template.ParseFiles("templates/log_template.html")
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to load template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare template data with the log entries
+	data := TemplateData{
+		LogEntries:   entries,
+		SelectedFile: logFile,
+	}
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
+	}
+}
+
 func main() {
 	connectToDatabase()
 	defer db.Close()
 
 	// Подключаем обработчики
+	http.HandleFunc("/logs/", requireAuth(logListHandler))
+	http.HandleFunc("/logs/view/", requireAuth(logViewerHandler))
 	http.HandleFunc("/", requireAuth(handleIndex))
 	http.HandleFunc("/table/", requireAuth(handleTable))
 	http.HandleFunc("/delete/", requireAuth(handleDelete))
@@ -401,3 +546,9 @@ func main() {
 		log.Fatalf("Server error: %v\n", err)
 	}
 }
+
+// radtest shs 1111 localhost 0 testing123
+// echo "User-Name=shs, User-Password=1111" | radclient -x localhost:1812 auth testing123
+// echo "User-Name=shs, Acct-Status-Type=Start" | radclient -x localhost acct testing123
+// echo "User-Name = 'shs', Acct-Status-Type = Start, NAS-IP-Address = 192.168.1.1, Acct-Session-Id = 'session123'" | radclient -x localhost acct testing123
+// http://172.22.87.209:8080/login
