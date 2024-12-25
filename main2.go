@@ -5,7 +5,6 @@ import (
 	"bufio"
 	_ "context"
 	"crypto/rand"
-	"crypto/sha256"
 	_ "crypto/sha256"
 	"database/sql"
 	"encoding/hex"
@@ -657,17 +656,8 @@ func logViewerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sha_256(text string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(text))
-	hashSum := hasher.Sum(nil)
-	// Преобразование хеша в строку (в шестнадцатеричном виде)
-	hashString := hex.EncodeToString(hashSum)
-	//fmt.Println("SHA-256 hash:", hashString)
-	return hashString
-}
-
 func main() {
+	mux := http.NewServeMux()
 	connectToDatabase()
 	defer db.Close()
 	//data := "admin"
@@ -679,20 +669,20 @@ func main() {
 	//hashString := hex.EncodeToString(hashSum)
 	//fmt.Println("SHA-256 hash:", hashString)
 	// Подключаем обработчики
-	http.HandleFunc("/logs/", requireAuth(logListHandler))
-	http.HandleFunc("/logs/view/", requireAuth(logViewerHandler))
-	http.HandleFunc("/", requireAuth(handleIndex))
-	http.HandleFunc("/table/", requireAuth(handleTable))
-	http.HandleFunc("/delete/", requireAuth(handleDelete))
-	http.HandleFunc("/add/", requireAuth(handleAdd))
-	http.HandleFunc("/table/users", requireAuth(handleTable))
-	http.HandleFunc("/add_user", requireAuth(handleAddUser))
-	http.HandleFunc("/login", handleLogin)
-	http.HandleFunc("/logout", requireAuth(handleLogout))
+	mux.HandleFunc("/logs/", requireAuth(logListHandler))
+	mux.HandleFunc("/logs/view/", requireAuth(logViewerHandler))
+	mux.HandleFunc("/", requireAuth(handleIndex))
+	mux.HandleFunc("/table/", requireAuth(handleTable))
+	mux.HandleFunc("/delete/", requireAuth(handleDelete))
+	mux.HandleFunc("/add/", requireAuth(handleAdd))
+	mux.HandleFunc("/table/users", requireAuth(handleTable))
+	mux.HandleFunc("/add_user", requireAuth(handleAddUser))
+	mux.HandleFunc("/login", handleLogin)
+	mux.HandleFunc("/logout", requireAuth(handleLogout))
 
 	port := ":8080"
 	fmt.Printf("Server is running at http://localhost%s\n", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(port, rateLimitMiddleware(mux)); err != nil {
 		//requireAuth
 		log.Fatalf("Server error: %v\n", err)
 	}
