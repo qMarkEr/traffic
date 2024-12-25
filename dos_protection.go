@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const requrst_limit = 0
+const requrst_limit = 10
 
 type ipLimiter struct {
 	limiter  *rate.Limiter
@@ -30,8 +30,7 @@ func getLimiter(ip string) *rate.Limiter {
 		return limiter.limiter
 	}
 
-	// Создаем новый лимитер: 10 запросов в секунду
-	limiter := rate.NewLimiter(requrst_limit, 20)
+	limiter := rate.NewLimiter(requrst_limit, requrst_limit*2)
 	ipLimits[ip] = &ipLimiter{limiter: limiter, lastSeen: time.Now()}
 
 	// Очищаем старые записи
