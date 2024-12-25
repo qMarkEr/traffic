@@ -54,17 +54,22 @@
 <body>
 <h1>Список Таблиц</h1>
 <ul>
-    {{range .}}
+    {{range .Table}}
     <li>
         <span>{{.}}</span>
         <div class="action-links">
             <a href="/table/{{.}}">Просмотр</a>
-            <a href="/add/{{.}}">Добавить Запись</a>
+            {{if eq $.Role "admin"}}
+                <a href="/add/{{.}}">Добавить запись</a>
+            {{end}}
         </div>
     </li>
     {{end}}
     <a href="/logout" class="logout-button">Выход</a>
     <a href="/logs" class="logout-button">Логи</a>
+    {{if eq $.Role "admin"}}
+        <a href="/table/users" class="logout-button">Пользователи</a>
+    {{end}}
 </ul>
 </body>
 </html>

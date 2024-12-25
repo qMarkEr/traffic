@@ -88,7 +88,9 @@
         {{range .Columns}}
         <th>{{.}}</th>
         {{end}}
+        {{if eq $.Role "admin"}}
         <th>Действия</th>
+        {{end}}
     </tr>
     </thead>
     <tbody>
@@ -97,22 +99,24 @@
         {{range .}} <!-- Доступ к каждому элементу строки -->
         <td>{{.}}</td> <!-- Отображение значений из строки -->
         {{end}}
-        {{if eq $.TableName "radacct"}}
-        <td>
-            <form action="/delete" method="get" style="display:inline;">
-                <input type="hidden" name="table" value="{{$.TableName}}">
-                <input type="hidden" name="id" value="{{index . 0}}">
-                <button type="submit">Удалит</button>
-            </form>
-        </td>
-        {{else}}
-        <td>
-            <form action="/delete" method="get" style="display:inline;">
-                <input type="hidden" name="table" value="{{$.TableName}}">
-                <input type="hidden" name="id" value="{{index . 0}}">
-                <button type="submit">Удалят</button>
-            </form>
-        </td>
+        {{if eq $.Role "admin"}}
+            {{if eq $.TableName "radacct"}}
+            <td>
+                <form action="/delete" method="get" style="display:inline;">
+                    <input type="hidden" name="table" value="{{$.TableName}}">
+                    <input type="hidden" name="id" value="{{index . 0}}">
+                    <button type="submit">Удалит</button>
+                </form>
+            </td>
+            {{else}}
+            <td>
+                <form action="/delete" method="get" style="display:inline;">
+                    <input type="hidden" name="table" value="{{$.TableName}}">
+                    <input type="hidden" name="id" value="{{index . 0}}">
+                    <button type="submit">Удалят</button>
+                </form>
+            </td>
+            {{end}}
         {{end}}
     </tr>
     {{end}}
@@ -131,5 +135,8 @@
 </div>
 
 <a href="/">Назад</a>
+{{if eq $.TableName "users"}}
+<a href="/add_user">Добавить пользователя</a>
+{{end}}
 </body>
 </html>

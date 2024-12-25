@@ -5,12 +5,15 @@ import (
 	"bufio"
 	_ "context"
 	"crypto/rand"
+	"crypto/sha256"
+	_ "crypto/sha256"
 	"database/sql"
 	"encoding/hex"
 	_ "encoding/hex"
 	"fmt"
 	_ "github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/lib/pq" // PostgreSQL драйвер
+	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"log"
 	"net/http"
@@ -30,6 +33,7 @@ const (
 
 var (
 	sessions     = make(map[string]string) // Карта сессий: sessionID -> username
+	roles        = make(map[string]string) // Карта сессий: sessionID -> rule
 	sessionsLock sync.Mutex
 )
 
@@ -39,6 +43,18 @@ type PageData struct {
 	Records     any
 	TableName   string
 	Columns     []string // Добавлено поле для колонок
+	Role        string
+}
+
+type MainPage struct {
+	Table []string
+	Role  string
+}
+
+type UserFormData struct {
+	Username string
+	Password string
+	Role     string
 }
 
 var db *sql.DB
@@ -64,9 +80,14 @@ func connectToDatabase() {
 
 // Функция для отображения главной страницы
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	tables := []string{"radacct", "radcheck", "radgroupcheck", "radgroupreply", "radreply", "radusergroup", "radpostauth", "nas", "nasreload"}
+	table := []string{"radacct", "radcheck", "radgroupcheck", "radgroupreply", "radreply", "radusergroup", "radpostauth", "nas", "nasreload"}
+	cookie, _ := r.Cookie("session_id")
+	data := MainPage{
+		Table: table,
+		Role:  roles[cookie.Value],
+	}
 	indexTmpl := template.Must(template.New("index.html").ParseFiles(indexPath))
-	if err := indexTmpl.Execute(w, tables); err != nil {
+	if err := indexTmpl.Execute(w, data); err != nil {
 		http.Error(w, "Template execution error", http.StatusInternalServerError)
 	}
 }
@@ -174,13 +195,14 @@ func handleTable(w http.ResponseWriter, r *http.Request) {
 	//}
 	//fmt.Println("---------------------------------------")
 	//
-
+	cookie, _ := r.Cookie("session_id")
 	data := PageData{
 		CurrentPage: page,
 		TotalPages:  totalPages,
 		Records:     records,
 		TableName:   table,
 		Columns:     cols,
+		Role:        roles[cookie.Value],
 	}
 
 	tableTmpl := template.Must(template.New("table.html").Funcs(template.FuncMap{
@@ -284,7 +306,8 @@ func handleDelete(w http.ResponseWriter, r *http.Request) {
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
 	const loginTemplatePath = "templates/login.html"
-
+	var passwordHash string
+	var role string
 	if r.Method == http.MethodGet {
 		tmpl := template.Must(template.New("login.html").ParseFiles(loginTemplatePath))
 		if err := tmpl.Execute(w, nil); err != nil {
@@ -294,16 +317,30 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		r.ParseForm()
 		username := r.FormValue("username")
 		password := r.FormValue("password")
+		query := "SELECT password_hash, role FROM users WHERE username=$1"
+		row := db.QueryRow(query, username)
 
+		err := row.Scan(&passwordHash, &role)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				fmt.Println("Пользователь не найден.")
+			} else {
+				log.Fatal("Ошибка при получении данных: ", err)
+			}
+		} else {
+			//fmt.Printf("Password Hash: %s\n", passwordHash)
+			//fmt.Printf("Role: %s\n", role)
+		}
 		// Пример проверки логина и пароля
-		if username == "admin" && password == "admin" {
+		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password))
+		//if password == passwordHash {
+		if err == nil {
 			sessionID := generateSessionID()
-
 			// Сохраняем сессию
 			sessionsLock.Lock()
 			sessions[sessionID] = username
+			roles[sessionID] = role
 			sessionsLock.Unlock()
-
 			// Устанавливаем куки с идентификатором сессии
 			http.SetCookie(w, &http.Cookie{
 				Name:     "session_id",
@@ -311,10 +348,10 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 				Path:     "/",
 				HttpOnly: true,
 			})
-
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		} else {
-			http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+			fmt.Println(err)
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		}
 	}
 }
@@ -361,6 +398,7 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 		// Удаляем сессию
 		sessionsLock.Lock()
 		delete(sessions, sessionID)
+		delete(roles, sessionID)
 		sessionsLock.Unlock()
 
 		// Удаляем куки
@@ -374,6 +412,47 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+func handleAddUser(w http.ResponseWriter, r *http.Request) {
+	const loginTemplatePath = "templates/add_user.html"
+	if r.Method == http.MethodGet {
+		tmpl := template.Must(template.New("add_user.html").ParseFiles(loginTemplatePath))
+		if err := tmpl.Execute(w, nil); err != nil {
+			http.Error(w, "Template execution error", http.StatusInternalServerError)
+		}
+		//tmpl, err := template.ParseFiles("templates/add_user.html")
+		//if err != nil {
+		//	log.Fatal("Ошибка при загрузке шаблона: ", err)
+		//}
+		//tmpl.Execute(w, nil)
+	}
+
+	if r.Method == http.MethodPost {
+		// Извлекаем данные из формы
+		username := r.FormValue("username")
+		password := r.FormValue("password")
+		role := r.FormValue("role")
+		//fmt.Println(username, password, role)
+		// Хэшируем пароль
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Ошибка хэширования пароля", http.StatusInternalServerError)
+			return
+		}
+
+		query := `INSERT INTO "users" (username, password_hash, role) VALUES ($1, $2, $3)`
+		_, err = db.Exec(query, username, string(hashedPassword), role)
+		if err != nil {
+			http.Error(w, "Ошибка при добавлении пользователя", http.StatusInternalServerError)
+			return
+		}
+
+		//fmt.Fprintf(w, "Пользователь %s успешно добавлен!", username)
+		//http.Redirect(w, r, "/table/users", http.StatusSeeOther)
+		http.Redirect(w, r, "/table/users", http.StatusSeeOther)
+	}
+	//http.Redirect(w, r, "/table/users", http.StatusSeeOther)
 }
 
 // Вспомогательная функция для объединения строк
@@ -526,10 +605,27 @@ func logViewerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func sha_256(text string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(text))
+	hashSum := hasher.Sum(nil)
+	// Преобразование хеша в строку (в шестнадцатеричном виде)
+	hashString := hex.EncodeToString(hashSum)
+	//fmt.Println("SHA-256 hash:", hashString)
+	return hashString
+}
+
 func main() {
 	connectToDatabase()
 	defer db.Close()
-
+	//data := "admin"
+	//hash := sha256.New()
+	//hash.Write([]byte(data))
+	//hashSum := hash.Sum(nil)
+	//
+	//// Преобразование хеша в строку (в шестнадцатеричном виде)
+	//hashString := hex.EncodeToString(hashSum)
+	//fmt.Println("SHA-256 hash:", hashString)
 	// Подключаем обработчики
 	http.HandleFunc("/logs/", requireAuth(logListHandler))
 	http.HandleFunc("/logs/view/", requireAuth(logViewerHandler))
@@ -537,12 +633,15 @@ func main() {
 	http.HandleFunc("/table/", requireAuth(handleTable))
 	http.HandleFunc("/delete/", requireAuth(handleDelete))
 	http.HandleFunc("/add/", requireAuth(handleAdd))
+	http.HandleFunc("/table/users", requireAuth(handleTable))
+	http.HandleFunc("/add_user", requireAuth(handleAddUser))
 	http.HandleFunc("/login", handleLogin)
 	http.HandleFunc("/logout", requireAuth(handleLogout))
 
 	port := ":8080"
 	fmt.Printf("Server is running at http://localhost%s\n", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
+		//requireAuth
 		log.Fatalf("Server error: %v\n", err)
 	}
 }
