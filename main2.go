@@ -27,6 +27,34 @@ import (
 	"time"
 )
 
+func showAlert(w http.ResponseWriter, message string) {
+	html := fmt.Sprintf(`
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Login</title>
+			<script>
+				alert(%q);
+				window.location.href = "/login";
+			</script>
+		</head>
+		<body></body>
+		</html>
+	`, message)
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(html))
+}
+
+type LoginAttempt struct {
+	Count    int
+	LastTry  time.Time
+	IsLocked bool
+}
+
+var accountAttempts = make(map[string]*LoginAttempt)
+var accountMu sync.Mutex
+
 const (
 	recordsPerPage = 5
 )
@@ -308,12 +336,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 	const loginTemplatePath = "templates/login.html"
 	var passwordHash string
 	var role string
+
+	accountMu.Lock()
+	defer accountMu.Unlock()
+
 	if r.Method == http.MethodGet {
 		tmpl := template.Must(template.New("login.html").ParseFiles(loginTemplatePath))
 		if err := tmpl.Execute(w, nil); err != nil {
 			http.Error(w, "Template execution error", http.StatusInternalServerError)
 		}
 	} else if r.Method == http.MethodPost {
+
 		r.ParseForm()
 		username := r.FormValue("username")
 		password := r.FormValue("password")
@@ -321,6 +354,17 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		row := db.QueryRow(query, username)
 
 		err := row.Scan(&passwordHash, &role)
+
+		attempt, exists := accountAttempts[username]
+		if !exists {
+			attempt = &LoginAttempt{}
+			accountAttempts[username] = attempt
+		}
+		if attempt.IsLocked && time.Since(attempt.LastTry) < 10*time.Second {
+			showAlert(w, "Account locked. Try again later.")
+			return
+		}
+
 		if err != nil {
 			if err == sql.ErrNoRows {
 				fmt.Println("Пользователь не найден.")
@@ -335,6 +379,9 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 		err = bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password))
 		//if password == passwordHash {
 		if err == nil {
+			attempt.Count = 0
+			attempt.IsLocked = false
+
 			sessionID := generateSessionID()
 			// Сохраняем сессию
 			sessionsLock.Lock()
@@ -350,7 +397,12 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
 			})
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 		} else {
-			fmt.Println(err)
+			attempt.LastTry = time.Now()
+			attempt.Count++
+			if attempt.Count >= 3 {
+				attempt.IsLocked = true
+				showAlert(w, "Too many failed attempts. Account locked.")
+			}
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 		}
 	}
