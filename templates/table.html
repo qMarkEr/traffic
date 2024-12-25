@@ -6,14 +6,16 @@
     <title>Таблица {{.TableName}}</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            color: #fff;
+            font-family: "Roboto Light",serif;
+            background-color: #3A3C37;
             margin: 0;
             padding: 20px;
         }
         h1 {
             text-align: center;
-            color: #333;
+            font-family: "Product Sans Medium",serif;
+            font-size: 50pt;
         }
         table {
             width: 100%;
@@ -21,24 +23,31 @@
             border-collapse: collapse;
             background-color: #fff;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px; /* Add border-radius */
         }
         th, td {
+            border-right: 2px solid #BDE988;
             padding: 12px;
             text-align: left;
-            border: 1px solid #ddd;
         }
         th {
-            background-color: #4CAF50;
-            color: white;
+            background-color: #BDE988;
+            color: #232323;
+            font-size: 15pt;
+            font-family: "Product Sans Medium",serif;
         }
         td {
-            background-color: #f9f9f9;
+
+            font-family: "Roboto Light",serif;
+            background-color: #232323;
+            color: #fff;
+            transition: background-color 0.2s ease-in-out;
         }
-        tr:nth-child(even) td {
-            background-color: #f2f2f2;
-        }
+        /*tr:nth-child(even) td {*/
+        /*    background-color: #f2f2f2;*/
+        /*}*/
         tr:hover td {
-            background-color: #e2e2e2;
+            background-color: #282926;
         }
         button {
             padding: 5px 10px;
@@ -53,7 +62,7 @@
         }
         a {
             text-decoration: none;
-            color: #4CAF50;
+            color: #BDE988;
             margin: 10px;
         }
         a:hover {
@@ -66,21 +75,23 @@
         .pagination a {
             padding: 8px 16px;
             margin: 0 5px;
-            background-color: #4CAF50;
+            background-color: #91b669;
             color: white;
             border-radius: 5px;
             text-decoration: none;
         }
         .pagination a:hover {
-            background-color: #45a049;
+            background-color: #84a35f;
         }
         .pagination span {
             padding: 8px 16px;
         }
     </style>
+
 </head>
 <body>
-<h1>Таблица: {{.TableName}}</h1>
+<a href="/">Home</a>
+<h1>{{.TableName}}</h1>
 
 <table>
     <thead>
@@ -126,17 +137,16 @@
 <!-- Пагинация -->
 <div class="pagination">
     {{if gt .CurrentPage 1}}
-    <a href="/table/{{.TableName}}?page={{sub .CurrentPage 1}}">Предыдущая</a>
+    <a href="/table/{{.TableName}}?page={{sub .CurrentPage 1}}"><</a>
     {{end}}
-    <span>Страница {{.CurrentPage}} из {{.TotalPages}}</span>
+    <span>Page {{.CurrentPage}} / {{.TotalPages}}</span>
     {{if lt .CurrentPage .TotalPages}}
-    <a href="/table/{{.TableName}}?page={{add .CurrentPage 1}}">Следующая</a>
+    <a href="/table/{{.TableName}}?page={{add .CurrentPage 1}}">></a>
     {{end}}
 </div>
 
-<a href="/">Назад</a>
 {{if eq $.TableName "users"}}
-<a href="/add_user">Добавить пользователя</a>
+<a href="/add_user">Add +</a>
 {{end}}
 </body>
 </html>

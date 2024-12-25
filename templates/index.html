@@ -1,3 +1,78 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="ru">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Таблицы</title>-->
+<!--    <style>-->
+<!--        body {-->
+<!--            font-family: Arial, sans-serif;-->
+<!--            background-color: #f4f4f4;-->
+<!--            margin: 0;-->
+<!--            padding: 20px;-->
+<!--        }-->
+<!--        h1 {-->
+<!--            text-align: center;-->
+<!--            color: #333;-->
+<!--        }-->
+<!--        ul {-->
+<!--            list-style-type: none;-->
+<!--            padding: 0;-->
+<!--        }-->
+<!--        li {-->
+<!--            background-color: #fff;-->
+<!--            margin: 10px 0;-->
+<!--            padding: 15px;-->
+<!--            border-radius: 5px;-->
+<!--            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--        }-->
+<!--        li a {-->
+<!--            text-decoration: none;-->
+<!--            color: #4CAF50;-->
+<!--            margin: 0 10px;-->
+<!--        }-->
+<!--        li a:hover {-->
+<!--            text-decoration: underline;-->
+<!--        }-->
+<!--        .action-links {-->
+<!--            display: flex;-->
+<!--            gap: 10px;-->
+<!--        }-->
+<!--        a {-->
+<!--            text-decoration: none;-->
+<!--            color: #4CAF50;-->
+<!--            margin: 0 10px;-->
+<!--        }-->
+<!--        a:hover {-->
+<!--            text-decoration: underline;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<h1>Список Таблиц</h1>-->
+<!--<ul>-->
+<!--    {{range .Table}}-->
+<!--    <li>-->
+<!--        <span>{{.}}</span>-->
+<!--        <div class="action-links">-->
+<!--            <a href="/table/{{.}}">Просмотр</a>-->
+<!--            {{if eq $.Role "admin"}}-->
+<!--                <a href="/add/{{.}}">Добавить запись</a>-->
+<!--            {{end}}-->
+<!--        </div>-->
+<!--    </li>-->
+<!--    {{end}}-->
+<!--    <a href="/logout" class="logout-button">Выход</a>-->
+<!--    <a href="/logs" class="logout-button">Логи</a>-->
+<!--    {{if eq $.Role "admin"}}-->
+<!--        <a href="/table/users" class="logout-button">Пользователи</a>-->
+<!--    {{end}}-->
+<!--</ul>-->
+<!--</body>-->
+<!--</html>-->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -6,36 +81,54 @@
     <title>Таблицы</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            color: white;
+            font-family: "Roboto Thin", sans-serif;
+            font-size: 15pt;
+            background-color: #3A3C37;
             margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
         h1 {
             text-align: center;
-            color: #333;
+            font-family: "Product Sans Medium",serif;
+            font-size: 50pt;
         }
         ul {
             list-style-type: none;
             padding: 0;
         }
         li {
-            background-color: #fff;
+            cursor: pointer;
+            background-color: #232323;
+            width: 200%;
+            translate: -27%;
             margin: 10px 0;
             padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 10px; /* увеличили радиус */
+            box-shadow: 0 4px 7px rgba(0, 0, 0, 0.1); /* улучшили тень */
             display: flex;
             justify-content: space-between;
             align-items: center;
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+        li:hover {
+            background-color: #707562;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2); /* stronger shadow on hover */
+            color: #fff; /* change text color on hover */
         }
         li a {
+            /*transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;*/
             text-decoration: none;
-            color: #4CAF50;
+            color: #BDE988;
+            font-size: 15pt;
             margin: 0 10px;
         }
         li a:hover {
-            text-decoration: underline;
+            text-decoration: none;
         }
         .action-links {
             display: flex;
@@ -43,33 +136,52 @@
         }
         a {
             text-decoration: none;
-            color: #4CAF50;
-            margin: 0 10px;
+            color: #BDE988;
+            margin: 10px;
         }
         a:hover {
             text-decoration: underline;
         }
+        .logout-button {
+            display: inline-block;
+            text-align: center;
+            margin-top: 10px;
+            color: #BDE988;
+        }
+        .etc {
+            background-color: #232323;
+            margin: 10px 0;
+            padding: 5px;
+            border-radius: 10px; /* увеличили радиус */
+            box-shadow: 0 4px 7px rgba(0, 0, 0, 0.1); /* улучшили тень */
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
     </style>
 </head>
 <body>
-<h1>Список Таблиц</h1>
+<h1>Samuel && Kark</h1>
+<div class="etc">
+    <a href="/logout" class="logout-button">Выход</a>
+    <a href="/logs" class="logout-button">Логи</a>
+    {{if eq $.Role "admin"}}
+    <a href="/table/users" class="logout-button">Пользователи</a>
+    {{end}}
+</div>
 <ul>
     {{range .Table}}
-    <li>
+    <li onclick="location.href='/table/{{.}}';">
         <span>{{.}}</span>
-        <div class="action-links">
-            <a href="/table/{{.}}">Просмотр</a>
+        <div>
+<!--            <a >Просмотр</a>-->
             {{if eq $.Role "admin"}}
-                <a href="/add/{{.}}">Добавить запись</a>
+            <a href="/add/{{.}}">+</a>
             {{end}}
         </div>
     </li>
     {{end}}
-    <a href="/logout" class="logout-button">Выход</a>
-    <a href="/logs" class="logout-button">Логи</a>
-    {{if eq $.Role "admin"}}
-        <a href="/table/users" class="logout-button">Пользователи</a>
-    {{end}}
+
 </ul>
 </body>
 </html>

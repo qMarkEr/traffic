@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background-color: #3A3C37;
             margin: 0;
             padding: 20px;
             display: flex;
@@ -16,46 +16,53 @@
             height: 100vh;
         }
         .login-container {
-            background-color: #fff;
+            background-color: #232323;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 25px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             width: 300px;
             text-align: center;
         }
         h1 {
-            color: #333;
+            font-family: "Product Sans Medium",serif;
+            color: #fff;
             margin-bottom: 20px;
         }
         input[type="text"],
         input[type="password"] {
-            width: 90%;
+            background-color: #131313;
+            width: 80%;
+            color: white;
             padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            margin: 5px 0;
+            border: 1px solid #3a3a3a;
+            border-radius: 50px;
+            transition: all 0.3s ease-in-out;
         }
         button {
             width: 90%;
             padding: 10px;
-            background-color: #4CAF50;
-            color: white;
+            margin: 20px 0;
+            background-color: #707562;
+            color: #91b669;
             border: none;
-            border-radius: 5px;
+            border-radius: 20px;
             cursor: pointer;
+            transition: all 0.3s ease-in-out;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #85917b;
+            scale: 102%;
         }
     </style>
 </head>
 <body>
 <div class="login-container">
-    <h1>Авторизация</h1>
+    <h1>Welcome!</h1>
     <form method="POST" action="/login">
         <input type="text" name="username" placeholder="Имя пользователя" required>
         <input type="password" name="password" placeholder="Пароль" required>
-        <button type="submit">Войти</button>
+        <button type="submit">Log in</button>
     </form>
 </div>
 </body>
